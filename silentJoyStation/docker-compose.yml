@@ -1,0 +1,73 @@
+version: '3'
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    volumes:
+      - ./webroot:/usr/share/nginx/audio
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - live_stream
+
+#  streamer:
+#    image: jrottenberg/ffmpeg:4.4-alpine
+#    entrypoint: /entrypoint.sh
+#    volumes:
+#      - ./musica:/musica:ro
+#      - ./webroot/hls:/hls
+#      - ./ffmpeg/entrypoint.sh:/entrypoint.sh
+
+  live_stream:
+    image: linuxserver/ffmpeg:latest
+    container_name: live_stream
+    restart: unless-stopped
+    devices:
+      - /dev/snd
+    volumes:
+      - ./webroot/hls:/hls
+    command: >
+      -f alsa
+      -ac 2
+      -ar 48000
+      -i hw:ICUSBAUDIO7D
+      -c:a aac
+      -profile:a aac_low
+      -b:a 256k
+      -af "highpass=f=60, lowpass=f=15000, volume=1.1"
+      -f hls
+      -hls_time 1
+      -hls_list_size 5
+      -hls_flags delete_segments
+      /hls/stream.m3u8
+
+#  mopidy:
+#    image: wernight/mopidy
+#    container_name: mopidy
+#    user: root
+#    ports:
+#      - "6680:6680"
+#    volumes:
+#      - ./musica:/var/lib/mopidy/media:ro
+#      - ./mopidy/config:/etc/mopidy
+#      - ./mopidy/cache:/var/lib/mopidy/.cache
+#    restart: unless-stopped
+
+#  mopidy-streamer:
+#    image: jrottenberg/ffmpeg:4.4-alpine
+#    container_name: mopidy_streamer
+#    network_mode: host
+#    volumes:
+#      - ./hls:/hls
+#    command: >
+#      -hide_banner
+#      -loglevel info
+#      -i udp://0.0.0.0:5555
+#      -c:a aac -b:a 128k
+#      -f hls
+#      -hls_time 1
+#      -hls_list_size 5
+#      -hls_flags delete_segments
+#      /hls/stream.m3u8 
+

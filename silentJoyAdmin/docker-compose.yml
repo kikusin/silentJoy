@@ -1,0 +1,23 @@
+version: '3'
+services:
+  admin-backend:
+    image: node:18-alpine
+    container_name: silentjoy_admin_backend
+    working_dir: /app
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    command: sh -c "npm install && node server.js"
+    ports:
+      - "5050:5050"
+
+  admin-web:
+    image: nginx:alpine
+    container_name: silentjoy_admin_web
+    restart: unless-stopped
+    volumes:
+      - ./webadmin:/usr/share/nginx/html:ro
+    ports:
+      - "5051:80"
+    depends_on:
+      - admin-backend

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sync Monitor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="syncCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('syncCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const columns = {};
+    const balls = [];
+
+    const COLUMN_WIDTH = 60;
+    const BALL_RADIUS = 10;
+    const SPEED = 1.5; // px per frame
+
+    function drawBall(ball) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, 2 * Math.PI);
+      ctx.fillStyle = ball.color;
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      const label = String(ball.segment).padStart(3, '0').slice(-3);
+      ctx.fillText(label, ball.x, ball.y + 4);
+    }
+	function drawUserLines() {
+	  ctx.strokeStyle = '#333';
+	  ctx.lineWidth = 2;
+	  Object.entries(columns).forEach(([userId, x]) => {
+	    ctx.beginPath();
+	    ctx.moveTo(x, 0);
+	    ctx.lineTo(x, canvas.height);
+	    ctx.stroke();
+	  });
+	}
+    function animate() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawUserLines();
+	balls.forEach(ball => {
+	  ball.y -= SPEED;
+	  drawBall(ball);
+	});
+      requestAnimationFrame(animate);
+    }
+
+    function getColumnX(userId) {
+      if (!columns[userId]) {
+        const index = Object.keys(columns).length;
+        columns[userId] = COLUMN_WIDTH * (index + 1);
+      }
+      return columns[userId];
+    }
+
+    function spawnBall(userId, segment) {
+      const x = getColumnX(userId);
+      const y = canvas.height + BALL_RADIUS;
+      let color;
+	if (String(segment).endsWith('5')) {
+	  color = '#ffcc00'; // Amarillo dorado si acaba en 5
+	} else {
+	  color = '#' + intToRGB(hashCode(userId));
+	}
+      balls.push({ x, y, segment, color });
+    }
+
+    function hashCode(str) {
+      return str.split('').reduce((s, c) => s + c.charCodeAt(0), 0);
+    }
+
+    function intToRGB(num) {
+      return ('00000' + (num & 0xFFFFFF).toString(16)).slice(-6);
+    }
+
+    // Connect to server-sent events
+    const backendHost = window.location.hostname;
+    const evtSource = new EventSource(`http://${backendHost}:5050/events`);
+    evtSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      spawnBall(data.id, data.segment);
+    };
+
+    animate();
+  </script>
+</body>
+</html>

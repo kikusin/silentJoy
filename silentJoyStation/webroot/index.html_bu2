@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>SilentJoyStation</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: visible;
+    }
+
+    #buttonWrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      overflow: visible;
+    }
+
+    #playButton {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      font-size: 3em;
+      background: #222;
+      color: white;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      position: relative;
+    }
+
+@keyframes jump {
+  0% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
+  60% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+.avatar.jump {
+  animation: jump 0.4s ease-out;
+}
+
+.avatar.flash svg circle {
+  stroke: #ffcc00 !important;
+  stroke-width: 4;
+  transition: stroke 0.2s;
+}
+
+.avatar {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  transition: top 0.5s ease, left 0.5s ease;
+}
+
+.wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  opacity: 0.9;
+  z-index: 5;
+  pointer-events: none;
+  animation: ripple 1.5s ease-out forwards;
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(50);
+    opacity: 0.1;
+  }
+}
+    audio {
+      display: none;
+    }
+
+#audienceLayer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.avatar svg {
+  width: 100%;
+  height: 100%;
+}
+  </style>
+</head>
+<body>
+  <div id="audienceLayer"></div>
+  <div id="buttonWrapper">
+    <button id="playButton">Shh!</button>
+    <audio id="player" controls></audio>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const button = document.getElementById("playButton");
+    const audio = document.getElementById("player");
+    const wrapper = document.getElementById("buttonWrapper");
+    let playing = false;
+
+    const clientId = localStorage.getItem("clientId") || `cliente_${Math.floor(Math.random() * 10000)}`;
+    localStorage.setItem("clientId", clientId);
+
+    function createWave(color) {
+      const wave = document.createElement("div");
+      wave.className = "wave";
+      wave.style.backgroundColor = color;
+      wrapper.appendChild(wave);
+      wave.addEventListener("animationend", () => wave.remove());
+    }
+
+    function reportSegment(segmentIndex) {
+      // Animación local
+      const color = segmentIndex % 10 === 5 ? "#ffcc00" : "#ffffff";
+      createWave(color);
+
+      // Llamada al backend admin
+      fetch("http://192.168.88.252:5050/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: clientId, segment: segmentIndex })
+      }).catch(err => console.warn("No se pudo reportar el segmento:", err));
+    }
+
+    function setupHLS() {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource("hls/stream.m3u8");
+        hls.attachMedia(audio);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          audio.play();
+        });
+
+        hls.on(Hls.Events.FRAG_CHANGED, (event, data) => {
+          const segmentName = data.frag.relurl;
+          const match = segmentName.match(/stream(\d+)\.ts/);
+          if (match) {
+            const segmentIndex = parseInt(match[1], 10);
+            reportSegment(segmentIndex);
+          }
+        });
+      } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        audio.src = 'hls/stream.m3u8';
+        audio.addEventListener('canplay', () => {
+          audio.play();
+        });
+      }
+    }
+const audienceLayer = document.getElementById("audienceLayer");
+const renderedAvatars = new Set();
+
+function drawAvatar(userId) {
+  if (renderedAvatars.has(userId)) return;
+  renderedAvatars.add(userId);
+
+  const div = document.createElement("div");
+  div.className = "avatar";
+  div.id = "avatar-" + userId;
+  div.style.left = Math.random() * (window.innerWidth - 40) + "px";
+  div.style.top = Math.random() * (window.innerHeight - 40) + "px";
+
+  div.innerHTML = `
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="28" fill="#222" stroke="#fff" stroke-width="2"/>
+      <circle cx="24" cy="26" r="3" fill="#fff"/>
+      <circle cx="40" cy="26" r="3" fill="#fff"/>
+      <path d="M24 42 C28 46, 36 46, 40 42" stroke="#fff" stroke-width="2" fill="none"/>
+      <rect x="10" y="24" width="6" height="16" rx="3" fill="#ccc"/>
+      <rect x="48" y="24" width="6" height="16" rx="3" fill="#ccc"/>
+    </svg>
+  `;
+
+  audienceLayer.appendChild(div);
+}
+const evtSource = new EventSource("http://192.168.88.252:5050/events");
+
+evtSource.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+  if (data.type === "userlist") {
+    data.ids.forEach(drawAvatar);
+  }
+  if (!data.type) {
+  	drawAvatar(data.id);
+  	reactToSegment(data.id);
+  }
+};
+    button.addEventListener("click", () => {
+      if (!playing) {
+        setupHLS();
+        audio.play();
+        button.textContent = "🔊";
+        playing = true;
+      } else {
+        audio.pause();
+        button.textContent = "🔇";
+        playing = false;
+      }
+    });
+
+function reactToSegment(userId) {
+  const avatar = document.getElementById("avatar-" + userId);
+  if (!avatar) return;
+
+  const r = Math.random();
+
+  if (r < 0.50) {
+    avatar.classList.add("jump");
+    setTimeout(() => avatar.classList.remove("jump"), 400);
+  } else if (r < 0.85) {
+    avatar.classList.add("flash");
+    setTimeout(() => avatar.classList.remove("flash"), 300);
+  } else {
+    moveAvatar(userId);
+  }
+}
+
+function moveAvatar(userId) {
+  const avatar = document.getElementById("avatar-" + userId);
+  if (!avatar) return;
+
+  const currentTop = parseFloat(avatar.style.top) || 0;
+  const currentLeft = parseFloat(avatar.style.left) || 0;
+
+  const maxMove = Math.min(window.innerWidth, window.innerHeight) * 0.10; // 4% de pantalla
+
+  const deltaX = (Math.random() - 0.5) * 2 * maxMove;
+  const deltaY = (Math.random() - 0.5) * 2 * maxMove;
+
+  let newLeft = currentLeft + deltaX;
+  let newTop = currentTop + deltaY;
+
+  // Limitar dentro de la pantalla
+  newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - 40));
+  newTop = Math.max(0, Math.min(newTop, window.innerHeight - 40));
+
+  avatar.style.left = `${newLeft}px`;
+  avatar.style.top = `${newTop}px`;
+}
+
+  </script>
+</body>
+</html>
