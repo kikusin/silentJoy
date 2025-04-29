@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>SilentJoyStation</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div id="waveContainer"></div>
+  <div id="audienceLayer"></div>
+  <div id="title">SILENT JOY</div>
+  <img id="startImage" src="silentJoy.png" alt="Iniciar emisión">
+  <audio id="player" controls></audio>
+
+  <canvas id="syncOverlay"></canvas>
+
+  <button id="showSyncButton">
+    <div></div><div></div><div></div>
+  </button>
+
+  <button id="reloadStreamButton">🔄</button>
+
+  <button id="selectGroupButton">❓</button>
+
+  <div id="groupSelector">
+    <div id="iconSelection">🐶 🐱 🐵 🦁 🐸 🦊 🐼 🐨</div>
+    <div id="colorSelection">
+      <div data-color="#e74c3c"></div>
+      <div data-color="#27ae60"></div>
+      <div data-color="#2980b9"></div>
+      <div data-color="#f1c40f"></div>
+      <div data-color="#9b59b6"></div>
+      <div data-color="#1abc9c"></div>
+    </div>
+  </div>
+
+  <script src="js/hls.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
