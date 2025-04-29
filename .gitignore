@@ -1,0 +1,26 @@
+# Ignorar configuración personal
+.bash_history
+.bash_logout
+.bashrc
+.gitconfig
+.lesshst
+.profile
+.sudo_as_admin_successful
+
+# Ignorar carpetas internas
+.config/
+.docker/
+.local/
+.ssh/
+
+# Ignorar archivos de prueba grandes
+test.wav
+
+# Ignorar cualquier archivo temporal o de backup
+*.tmp
+*.bak
+*.swp
+*.swo
+
+#Ignorar los arhcivos de stream
+silentJoyStation/webroot/hls/

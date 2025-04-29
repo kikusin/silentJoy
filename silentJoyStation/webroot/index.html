@@ -271,7 +271,47 @@
 ">
   🔄
 </button>
+<!-- Botón para seleccionar grupo -->
+<button id="selectGroupButton" style="
+  position: fixed;
+  bottom: 270px;
+  right: 30px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  cursor: pointer;
+  z-index: 1000;
+  font-size: 30px;
+">🎯</button>
 
+<!-- Selector de icono y color oculto -->
+<div id="groupSelector" style="
+  position: fixed;
+  bottom: 380px;
+  right: 30px;
+  background: white;
+  padding: 10px;
+  border-radius: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1001;
+">
+  <div id="iconSelection" style="display:flex; gap:5px; flex-wrap:wrap;">
+    🐶 🐱 🐵 🦁 🐸 🦊 🐼 🐨
+  </div>
+  <div id="colorSelection" style="display:flex; gap:5px; margin-top:5px;">
+    <div style="width:24px; height:24px; background:#e74c3c; cursor:pointer;" data-color="#e74c3c"></div>
+    <div style="width:24px; height:24px; background:#27ae60; cursor:pointer;" data-color="#27ae60"></div>
+    <div style="width:24px; height:24px; background:#2980b9; cursor:pointer;" data-color="#2980b9"></div>
+    <div style="width:24px; height:24px; background:#f1c40f; cursor:pointer;" data-color="#f1c40f"></div>
+    <div style="width:24px; height:24px; background:#9b59b6; cursor:pointer;" data-color="#9b59b6"></div>
+    <div style="width:24px; height:24px; background:#1abc9c; cursor:pointer;" data-color="#1abc9c"></div>
+  </div>
+</div>
   <script src="js/hls.min.js"></script>
   <script>
     const startImage = document.getElementById("startImage");
@@ -607,6 +647,137 @@ reloadBtn.addEventListener("click", () => {
    setupHLS();
   }, 1000);
 });
+
+// Variables de grupo
+let userGroup = { icon: '', color: '' };
+const userGroups = {};
+
+const selectGroupButton = document.getElementById('selectGroupButton');
+const groupSelector = document.getElementById('groupSelector');
+const iconSelection = document.getElementById('iconSelection');
+const colorSelection = document.getElementById('colorSelection');
+
+// Ocultar inicialmente el botón de grupo
+selectGroupButton.style.display = 'none';
+
+// Al mostrar las rayitas (overlay) también mostramos el botón
+showSyncButton.addEventListener("click", () => {
+  showOverlay = !showOverlay;
+  canvas.style.display = showOverlay ? 'block' : 'none';
+  reloadBtn.style.display = showOverlay ? 'block' : 'none';
+  selectGroupButton.style.display = showOverlay ? 'block' : 'none';
+
+  if (showOverlay) {
+    cancelAnimationFrame(animationId);
+    animationId = requestAnimationFrame(animateOverlay);
+  } else {
+    cancelAnimationFrame(animationId);
+    groupSelector.style.display = 'none'; // por si quedó abierto
+  }
+});
+
+// Al pulsar el botón de grupo, abrir el selector
+selectGroupButton.addEventListener('click', () => {
+  groupSelector.style.display = groupSelector.style.display === 'flex' ? 'none' : 'flex';
+});
+
+// Elegir icono
+iconSelection.addEventListener('click', (e) => {
+  if (e.target.textContent.trim()) {
+    userGroup.icon = e.target.textContent.trim();
+    selectGroupButton.innerText = userGroup.icon;
+  }
+});
+
+// Elegir color
+colorSelection.addEventListener('click', (e) => {
+  const color = e.target.getAttribute('data-color');
+  if (color) {
+    userGroup.color = color;
+    selectGroupButton.style.background = userGroup.color;
+    groupSelector.style.display = 'none';
+  }
+});
+
+
+
+// Nueva versión de getColumnX para manejar máximo 20 usuarios
+function getColumnX(userId) {
+  // Centro para el propio usuario
+  if (!columns[clientId]) {
+    columns[clientId] = canvas.width / 2;
+  }
+
+  if (!columns[userId]) {
+    const usedPositions = Object.values(columns);
+    const center = canvas.width / 2;
+    let offset = COLUMN_WIDTH;
+    let candidate;
+    while (true) {
+      for (let direction of [1, -1]) {
+        candidate = center + direction * offset;
+        if (!usedPositions.includes(candidate)) {
+          columns[userId] = candidate;
+          return columns[userId];
+        }
+      }
+      offset += COLUMN_WIDTH;
+    }
+  }
+  return columns[userId];
+}
+
+// Redefinir drawUserLines para grupos y máximo 20
+function drawUserLines() {
+  const allUserIds = Object.keys(columns);
+  
+  // Priorizar: tú → tu grupo → randoms → máximo 20
+  const sortedIds = [clientId];
+
+  // Usuarios del mismo grupo
+  const groupMembers = allUserIds.filter(id => {
+    if (id === clientId) return false;
+    return userGroups[id]?.icon === userGroup.icon && userGroups[id]?.color === userGroup.color;
+  });
+
+  // Otros usuarios
+  const otherUsers = allUserIds.filter(id => !sortedIds.includes(id) && !groupMembers.includes(id));
+
+  sortedIds.push(...groupMembers, ...otherUsers);
+
+  // Truncar a máximo 20 usuarios
+  const idsToDraw = sortedIds.slice(0, 20);
+
+  idsToDraw.forEach((userId) => {
+    ctx.beginPath();
+    ctx.moveTo(getColumnX(userId), 0);
+    ctx.lineTo(getColumnX(userId), canvas.height);
+    
+    if (userId === clientId) {
+      ctx.strokeStyle = '#f00'; // Rojo para ti
+      ctx.lineWidth = 4;
+    } else if (userGroups[userId]?.icon === userGroup.icon && userGroups[userId]?.color === userGroup.color) {
+      ctx.strokeStyle = userGroup.color; // Color de grupo
+      ctx.lineWidth = 3;
+    } else {
+      ctx.strokeStyle = '#333'; // Gris para randoms
+      ctx.lineWidth = 2;
+    }
+    ctx.stroke();
+  });
+}
+
+// Capturar eventos para almacenar grupos
+syncEvents.onmessage = function(event) {
+  const data = JSON.parse(event.data);
+
+  if (data.group) {
+    userGroups[data.id] = data.group;
+  }
+
+  if (showOverlay) spawnBall(data.id, data.segment);
+};
+
 
   </script>
 </body>
