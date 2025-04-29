@@ -271,7 +271,7 @@
     const audio = document.getElementById("player");
     const wrapper = document.getElementById("buttonWrapper");
     const audienceLayer = document.getElementById("audienceLayer");
-    const clientId = sessionStorage.getItem("clientId") || client_${Date.now()}_${Math.floor(Math.random() * 100000)}; 
+    const clientId = sessionStorage.getItem("clientId") || `client_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
     sessionStorage.setItem("clientId", clientId);
 
     let playing = false;
@@ -387,8 +387,8 @@ function setupHLS(delayMs = 0) {
       let newTop = currentTop + deltaY;
       newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - 40));
       newTop = Math.max(0, Math.min(newTop, window.innerHeight - 40));
-      avatar.style.left = ${newLeft}px;
-      avatar.style.top = ${newTop}px;
+      avatar.style.left = `${newLeft}px`;
+      avatar.style.top = `${newTop}px`;
     }
 
     const evtSource = new EventSource("http://192.168.88.252:5050/events");
@@ -554,17 +554,11 @@ showSyncButton.addEventListener("click", () => {
 });
 
 const backendHost = window.location.hostname;
-const syncEvents = new EventSource(http://${backendHost}:5050/events);
+const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
   if (showOverlay) spawnBall(data.id, data.segment);
 };
-
-showSyncButton.addEventListener("click", () => {
-  showOverlay = !showOverlay;
-  canvas.style.display = showOverlay ? 'block' : 'none';
-  if (showOverlay) animateOverlay();
-});
 
 setInterval(() => {
   const now = Date.now();
@@ -580,18 +574,6 @@ setInterval(() => {
 }, 10000);
 
 const reloadBtn = document.getElementById("reloadStreamButton");
-
-showSyncButton.addEventListener("click", () => {
-  showOverlay = !showOverlay;
-  canvas.style.display = showOverlay ? 'block' : 'none';
-  reloadBtn.style.display = showOverlay ? 'block' : 'none';
-
-  if (showOverlay) {
-    animationId = requestAnimationFrame(animateOverlay);
-  } else {
-    cancelAnimationFrame(animationId);
-  }
-});
 
 reloadBtn.addEventListener("click", () => {
   console.log("🔁 Recargando stream");
