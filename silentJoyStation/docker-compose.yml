@@ -37,7 +37,7 @@ services:
       -b:a 256k
       -af "highpass=f=60, lowpass=f=15000, volume=1.1"
       -f hls
-      -hls_time 1
+      -hls_time 2
       -hls_list_size 5
       -hls_flags delete_segments
       /hls/stream.m3u8
