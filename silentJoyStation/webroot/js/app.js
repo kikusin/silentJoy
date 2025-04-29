@@ -29,7 +29,7 @@ const BALL_RADIUS = 10;
 const SPEED = 1.5;
 
 // Setup HLS
-function setupHLS(delayMs = 0) {
+function setupHLS(delayMs = 1000) {
     if (hlsInstance) {
       try {
         hlsInstance.destroy();
