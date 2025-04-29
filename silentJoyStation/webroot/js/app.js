@@ -30,38 +30,42 @@ const SPEED = 1.5;
 
 // Setup HLS
 function setupHLS(delayMs = 0) {
-  if (hlsInstance) {
-    hlsInstance.destroy();
+    if (hlsInstance) {
+      try {
+        hlsInstance.destroy();
+      } catch (err) {
+        console.warn("⚠️ Error al destruir HLS:", err);
+      }
+      hlsInstance = null;
+    }
+  
+    if (Hls.isSupported()) {
+      hlsInstance = new Hls();
+      hlsInstance.attachMedia(audio);
+      hlsInstance.loadSource("hls/stream.m3u8");
+  
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log("✅ MANIFEST PARSED");
+        delayMs > 0 ? setTimeout(() => audio.play(), delayMs) : audio.play();
+      });
+  
+      hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
+        const match = data.frag.relurl.match(/stream(\\d+)\\.ts/);
+        if (match) {
+          reportSegment(parseInt(match[1], 10));
+        }
+      });
+  
+      hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+        console.error("❌ HLS ERROR", data);
+      });
+  
+    } else {
+      console.warn("⚠️ HLS no soportado, usando fallback");
+      audio.src = "hls/stream.m3u8";
+      audio.addEventListener('canplay', () => audio.play());
+    }
   }
-
-  if (Hls.isSupported()) {
-    hlsInstance = new Hls();
-    hlsInstance.loadSource("hls/stream.m3u8");
-    hlsInstance.attachMedia(audio);
-
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-      delayMs > 0 ? setTimeout(() => audio.play(), delayMs) : audio.play();
-    });
-
-    hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
-      const match = data.frag.relurl.match(/stream(\\d+)\\.ts/);
-      if (match) reportSegment(parseInt(match[1], 10));
-    });
-  }
-}
-
-// Eventos
-startImage.addEventListener("click", () => {
-  if (!playing) {
-    setupHLS();
-    playing = true;
-    startImage.classList.add("shrink");
-  } else {
-    audio.pause();
-    playing = false;
-    startImage.classList.remove("shrink");
-  }
-});
 
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
