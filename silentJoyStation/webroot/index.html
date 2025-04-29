@@ -356,6 +356,9 @@
 
 function setupHLS(delayMs = 0) {
   if (Hls.isSupported()) {
+    if (hls) {
+      hls.destroy();
+    }
     const hls = new Hls();
     hls.loadSource("hls/stream.m3u8");
     hls.attachMedia(audio);
@@ -476,7 +479,6 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const showSyncButton = document.getElementById("showSyncButton");
 
 let showOverlay = false;
 const columns = {};
@@ -587,31 +589,12 @@ function animateOverlay() {
   animationId = requestAnimationFrame(animateOverlay);
 }
 
-showSyncButton.addEventListener("click", () => {
-  showOverlay = !showOverlay;
-  canvas.style.display = showOverlay ? 'block' : 'none';
-  reloadBtn.style.display = showOverlay ? 'block' : 'none';
-
-  if (showOverlay) {
-    cancelAnimationFrame(animationId); // prevenir bucles duplicados
-    animationId = requestAnimationFrame(animateOverlay);
-  } else {
-    cancelAnimationFrame(animationId);
-  }
-});
-
 const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
   if (showOverlay) spawnBall(data.id, data.segment);
 };
-
-showSyncButton.addEventListener("click", () => {
-  showOverlay = !showOverlay;
-  canvas.style.display = showOverlay ? 'block' : 'none';
-  if (showOverlay) animateOverlay();
-});
 
 setInterval(() => {
   const now = Date.now();
@@ -626,20 +609,6 @@ setInterval(() => {
   });
 }, 10000);
 
-const reloadBtn = document.getElementById("reloadStreamButton");
-
-showSyncButton.addEventListener("click", () => {
-  showOverlay = !showOverlay;
-  canvas.style.display = showOverlay ? 'block' : 'none';
-  reloadBtn.style.display = showOverlay ? 'block' : 'none';
-
-  if (showOverlay) {
-    animationId = requestAnimationFrame(animateOverlay);
-  } else {
-    cancelAnimationFrame(animationId);
-  }
-});
-
 reloadBtn.addEventListener("click", () => {
   console.log("🔁 Recargando stream");
   audio.pause();
@@ -648,19 +617,25 @@ reloadBtn.addEventListener("click", () => {
   }, 1000);
 });
 
+
 // Variables de grupo
 let userGroup = { icon: '', color: '' };
 const userGroups = {};
 
+// Botones y elementos
 const selectGroupButton = document.getElementById('selectGroupButton');
 const groupSelector = document.getElementById('groupSelector');
 const iconSelection = document.getElementById('iconSelection');
 const colorSelection = document.getElementById('colorSelection');
+const showSyncButton = document.getElementById('showSyncButton');
+const reloadBtn = document.getElementById('reloadStreamButton');
 
-// Ocultar inicialmente el botón de grupo
+// Ocultar inicialmente
 selectGroupButton.style.display = 'none';
+groupSelector.style.display = 'none';
 
-// Al mostrar las rayitas (overlay) también mostramos el botón
+let hlsInstance = null; // 🔄 Instancia global para HLS
+
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
   canvas.style.display = showOverlay ? 'block' : 'none';
@@ -672,16 +647,14 @@ showSyncButton.addEventListener("click", () => {
     animationId = requestAnimationFrame(animateOverlay);
   } else {
     cancelAnimationFrame(animationId);
-    groupSelector.style.display = 'none'; // por si quedó abierto
+    groupSelector.style.display = 'none';
   }
 });
 
-// Al pulsar el botón de grupo, abrir el selector
 selectGroupButton.addEventListener('click', () => {
   groupSelector.style.display = groupSelector.style.display === 'flex' ? 'none' : 'flex';
 });
 
-// Elegir icono
 iconSelection.addEventListener('click', (e) => {
   if (e.target.textContent.trim()) {
     userGroup.icon = e.target.textContent.trim();
@@ -689,7 +662,6 @@ iconSelection.addEventListener('click', (e) => {
   }
 });
 
-// Elegir color
 colorSelection.addEventListener('click', (e) => {
   const color = e.target.getAttribute('data-color');
   if (color) {
@@ -697,6 +669,16 @@ colorSelection.addEventListener('click', (e) => {
     selectGroupButton.style.background = userGroup.color;
     groupSelector.style.display = 'none';
   }
+});
+
+reloadBtn.addEventListener("click", () => {
+  console.log("🔁 Recargando stream");
+  if (audio) audio.pause();
+  if (hlsInstance) {
+    hlsInstance.destroy();
+    hlsInstance = null;
+  }
+  setTimeout(() => setupHLS(), 1000);
 });
 
 
