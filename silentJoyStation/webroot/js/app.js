@@ -342,7 +342,7 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  getColumnX(data.id);
+  currentColumns(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
   }
