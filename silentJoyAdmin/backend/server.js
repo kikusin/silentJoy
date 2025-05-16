@@ -26,11 +26,22 @@ app.get('/events', (req, res) => {
 
 // Endpoint que reciben los clientes del stream
 const userSet = new Set();
+const userGroups = {}; // nuevo: almacena icono + color por id
 
 app.post('/sync', (req, res) => {
-  const { id, segment } = req.body;
+  const { id, segment, group } = req.body;
   const now = Date.now();
-  const payload = JSON.stringify({ id, segment, timestamp: now });
+
+  if (group) {
+    userGroups[id] = group;
+  }
+
+  const payload = JSON.stringify({
+    id,
+    segment,
+    timestamp: now,
+    group: userGroups[id] || null
+  });
 
   // Emitir el sync normal
   clients.forEach(client => client.write(`data: ${payload}\n\n`));
