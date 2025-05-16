@@ -172,7 +172,7 @@ function spawnBall(userId, segment) {
   if (currentColumns[userId]) {
     x = currentColumns[userId];
   } else {
-    // Posición provisional si aún no fue asignada en drawUserLines
+    // Si aún no hay layout asignado, dar posición provisional
     const used = Object.values(currentColumns);
     const center = canvas.width / 2;
     let offset = COLUMN_WIDTH;
@@ -212,25 +212,21 @@ function drawBall(ball) {
 
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
 
-  const allUserIds = Object.keys(columns);
+  const allUserIds = Object.keys(userGroups);
 
-  const teammates = allUserIds.filter(id => {
-    return id !== clientId &&
-      userGroups[id]?.icon === userGroup.icon &&
-      userGroups[id]?.color === userGroup.color;
-  });
+  const teammates = allUserIds.filter(id =>
+    id !== clientId &&
+    userGroups[id]?.icon === userGroup.icon &&
+    userGroups[id]?.color === userGroup.color
+  );
 
   const others = allUserIds.filter(id =>
     id !== clientId && !teammates.includes(id)
   );
 
-  // Componer la lista final: tú + equipo + random hasta 16
   const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
-
-  // nuevo: recalcular columnas cada vez
-  currentColumns = getColumnLayout(idsToDraw);  
+  currentColumns = getColumnLayout(idsToDraw);
 
   idsToDraw.forEach((userId) => {
     const x = currentColumns[userId];
@@ -266,12 +262,9 @@ function getColumnLayout(userIds) {
 
   for (const id of userIds) {
     if (id === clientId) continue;
-
     const dir = i % 2 === 0 ? -1 : 1;
     const position = center + dir * offset;
-
     layout[id] = position;
-
     if (dir === 1) offset += COLUMN_WIDTH;
     i++;
   }
