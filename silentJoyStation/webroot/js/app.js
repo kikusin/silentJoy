@@ -67,6 +67,15 @@ function setupHLS(delayMs = 1000) {
     }
   }
 
+  function createWave(color) {
+    const wave = document.createElement("div");
+    wave.className = "wave";
+    wave.style.backgroundColor = color;
+    const container = document.getElementById("waveContainer");
+    container.appendChild(wave);
+    wave.addEventListener("animationend", () => wave.remove());
+  }
+
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
   canvas.style.display = showOverlay ? 'block' : 'none';
