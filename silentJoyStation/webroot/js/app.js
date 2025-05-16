@@ -27,6 +27,7 @@ const balls = [];
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = 10;
 const SPEED = 1.5;
+let currentColumns = {};
 
 // Setup HLS
 function setupHLS(delayMs = 1000) {
@@ -187,6 +188,7 @@ function drawBall(ball) {
 
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
 
   const allUserIds = Object.keys(columns);
 
@@ -204,7 +206,7 @@ function drawUserLines() {
   const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
 
   // nuevo: recalcular columnas cada vez
-  const currentColumns = getColumnLayout(idsToDraw);  
+  currentColumns = getColumnLayout(idsToDraw);  
 
   idsToDraw.forEach((userId) => {
     const x = currentColumns[userId];
