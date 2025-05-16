@@ -203,8 +203,11 @@ function drawUserLines() {
   // Componer la lista final: tú + equipo + random hasta 16
   const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
 
+  // nuevo: recalcular columnas cada vez
+  const currentColumns = getColumnLayout(idsToDraw);  
+
   idsToDraw.forEach((userId) => {
-    const x = getColumnX(userId);
+    const x = currentColumns[userId];
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, canvas.height);
@@ -227,7 +230,30 @@ function drawUserLines() {
   });
 }
 
-function getColumnX(userId) {
+function getColumnLayout(userIds) {
+  const layout = {};
+  const center = canvas.width / 2;
+  layout[clientId] = center;
+
+  let offset = COLUMN_WIDTH;
+  let i = 1;
+
+  for (const id of userIds) {
+    if (id === clientId) continue;
+
+    const dir = i % 2 === 0 ? -1 : 1;
+    const position = center + dir * offset;
+
+    layout[id] = position;
+
+    if (dir === 1) offset += COLUMN_WIDTH;
+    i++;
+  }
+
+  return layout;
+}
+
+/*function getColumnX(userId) {
   if (!columns[clientId]) columns[clientId] = canvas.width / 2;
   if (!columns[userId]) {
     const used = Object.values(columns);
@@ -245,7 +271,7 @@ function getColumnX(userId) {
     }
   }
   return columns[userId];
-}
+}*/
 
 function animateOverlay() {
   if (!showOverlay) return;
