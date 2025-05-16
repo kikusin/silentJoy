@@ -271,11 +271,14 @@ audio {
   z-index: 1001;
 }
 
-#iconSelection {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  font-size: 24px;
+#iconSelection .icon {
+  font-size: 32px;
+  padding: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+#iconSelection .icon:hover {
+  transform: scale(1.2);
 }
 
 #colorSelection {
@@ -285,12 +288,23 @@ audio {
 }
 
 #colorSelection div {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
 }
+
+#colorSelection div[data-color] {
+  background-color: currentColor;
+}
+
+#colorSelection div[data-color="#e74c3c"] { color: #e74c3c; }
+#colorSelection div[data-color="#27ae60"] { color: #27ae60; }
+#colorSelection div[data-color="#2980b9"] { color: #2980b9; }
+#colorSelection div[data-color="#f1c40f"] { color: #f1c40f; }
+#colorSelection div[data-color="#9b59b6"] { color: #9b59b6; }
+#colorSelection div[data-color="#1abc9c"] { color: #1abc9c; }
 
 

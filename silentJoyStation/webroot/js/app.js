@@ -93,7 +93,7 @@ selectGroupButton.addEventListener("click", () => {
 });
 
 iconSelection.addEventListener("click", (e) => {
-  if (e.target.textContent.trim()) {
+  if (e.target.classList.contains("icon")) {
     userGroup.icon = e.target.textContent.trim();
     iconSelection.style.display = 'none';
     colorSelection.style.display = 'flex';
@@ -104,7 +104,7 @@ colorSelection.addEventListener("click", (e) => {
   const color = e.target.getAttribute('data-color');
   if (color) {
     userGroup.color = color;
-    selectGroupButton.innerHTML = `<span style="font-size:32px;">${userGroup.icon}</span>`;
+    selectGroupButton.innerHTML = `<span style="font-size: 32px;">${userGroup.icon}</span>`;
     selectGroupButton.style.background = userGroup.color;
     groupSelector.style.display = 'none';
     iconSelection.style.display = 'none';
