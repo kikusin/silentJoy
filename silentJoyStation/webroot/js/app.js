@@ -181,19 +181,48 @@ function drawBall(ball) {
   ctx.fillStyle = "#fff";
   ctx.font = "12px sans-serif";
   ctx.textAlign = "center";
-  const label = String(ball.segment).padStart(3, "0");
+  const label = String(ball.segment % 1000).padStart(3, "0");
   ctx.fillText(label, ball.x, ball.y + 4);
 }
 
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const ids = Object.keys(columns).slice(0, 20);
-  ids.forEach((id) => {
+
+  const allUserIds = Object.keys(columns);
+
+  const teammates = allUserIds.filter(id => {
+    return id !== clientId &&
+      userGroups[id]?.icon === userGroup.icon &&
+      userGroups[id]?.color === userGroup.color;
+  });
+
+  const others = allUserIds.filter(id =>
+    id !== clientId && !teammates.includes(id)
+  );
+
+  // Componer la lista final: tú + equipo + random hasta 16
+  const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
+
+  idsToDraw.forEach((userId) => {
+    const x = getColumnX(userId);
     ctx.beginPath();
-    ctx.moveTo(columns[id], 0);
-    ctx.lineTo(columns[id], canvas.height);
-    ctx.strokeStyle = id === clientId ? "#f00" : (userGroups[id]?.color || "#333");
-    ctx.lineWidth = id === clientId ? 4 : 2;
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+
+    if (userId === clientId) {
+      ctx.strokeStyle = "#f00";
+      ctx.lineWidth = 4;
+    } else if (
+      userGroups[userId]?.icon === userGroup.icon &&
+      userGroups[userId]?.color === userGroup.color
+    ) {
+      ctx.strokeStyle = userGroup.color;
+      ctx.lineWidth = 3;
+    } else {
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+    }
+
     ctx.stroke();
   });
 }
