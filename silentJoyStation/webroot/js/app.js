@@ -25,7 +25,7 @@ const userGroups = {};
 const columns = {};
 const balls = [];
 const COLUMN_WIDTH = 60;
-const BALL_RADIUS = 10;
+const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
 const SPEED = 1.5;
 let currentColumns = {};
 

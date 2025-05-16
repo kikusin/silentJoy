@@ -308,3 +308,40 @@ audio {
 #colorSelection div[data-color="#1abc9c"] { color: #1abc9c; }
 
 
+@media (max-width: 768px) {
+  #showSyncButton,
+  #reloadStreamButton,
+  #selectGroupButton {
+    width: 160px;
+    height: 160px;
+    font-size: 48px;
+  }
+
+  #showSyncButton div {
+    width: 10px;
+    height: 40px;
+  }
+
+  #showSyncButton div:nth-child(2) {
+    height: 48px;
+  }
+
+  .wave {
+    width: 40px;
+    height: 40px;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .avatar svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  canvas {
+    font-size: 24px !important;
+  }
+}
