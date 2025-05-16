@@ -121,6 +121,17 @@ function reportSegment(segmentIndex) {
   const color = segmentIndex % 10 === 5 ? "#ffcc00" : "#ffffff";
   createWave(color); // puedes eliminar si no usas olas visuales
 
+  if (segmentIndex % 10 === 5) {
+    const title = document.getElementById("title");
+    const img = document.getElementById("startImage");
+    title.classList.add("glow");
+    img.classList.add("imagen-rotatoria");
+    setTimeout(() => {
+      title.classList.remove("glow");
+      img.classList.remove("imagen-rotatoria");
+    }, 2000);
+  }
+
   fetch(`http://${backendHost}:5050/sync`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -216,4 +227,6 @@ syncEvents.onmessage = function(event) {
       userGroups[data.id] = data.group;
     }
   if (showOverlay) spawnBall(data.id, data.segment);
+  drawAvatar(data.id);
+  reactToSegment(data.id);
 };
