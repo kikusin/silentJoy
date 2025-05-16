@@ -104,11 +104,33 @@ colorSelection.addEventListener("click", (e) => {
   const color = e.target.getAttribute('data-color');
   if (color) {
     userGroup.color = color;
-    selectGroupButton.innerText = userGroup.icon;
+    selectGroupButton.innerHTML = `<span style="font-size:32px;">${userGroup.icon}</span>`;
     selectGroupButton.style.background = userGroup.color;
     groupSelector.style.display = 'none';
     iconSelection.style.display = 'none';
     colorSelection.style.display = 'none';
+    // Mostrar mensaje flotante con el grupo
+    const msg = document.createElement("div");
+    msg.innerText = `Equipo: ${userGroup.icon}`;
+    msg.style.position = 'fixed';
+    msg.style.bottom = '390px';
+    msg.style.right = '130px';
+    msg.style.background = '#fff';
+    msg.style.color = '#000';
+    msg.style.padding = '6px 12px';
+    msg.style.borderRadius = '12px';
+    msg.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    msg.style.fontSize = '18px';
+    msg.style.zIndex = 1002;
+    msg.style.opacity = '0';
+    msg.style.transition = 'opacity 0.3s ease-out';
+
+    document.body.appendChild(msg);
+    setTimeout(() => { msg.style.opacity = '1'; }, 10);
+    setTimeout(() => {
+      msg.style.opacity = '0';
+      setTimeout(() => msg.remove(), 500);
+    }, 2000);
   }
 });
 
