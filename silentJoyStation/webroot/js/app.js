@@ -167,7 +167,31 @@ function reportSegment(segmentIndex) {
 }
 
 function spawnBall(userId, segment) {
-  const x = currentColumns?.[userId] ?? canvas.width / 2;
+  let x;
+
+  if (currentColumns[userId]) {
+    x = currentColumns[userId];
+  } else {
+    // Posición provisional si aún no fue asignada en drawUserLines
+    const used = Object.values(currentColumns);
+    const center = canvas.width / 2;
+    let offset = COLUMN_WIDTH;
+    let candidate;
+
+    while (true) {
+      for (let dir of [1, -1]) {
+        candidate = center + dir * offset;
+        if (!used.includes(candidate)) {
+          currentColumns[userId] = candidate;
+          x = candidate;
+          break;
+        }
+      }
+      if (x) break;
+      offset += COLUMN_WIDTH;
+    }
+  }
+
   const y = canvas.height + BALL_RADIUS;
   let color = userGroups[userId]?.color || "#999";
   if (String(segment).endsWith("5")) color = "#ffcc00";
