@@ -166,7 +166,7 @@ function reportSegment(segmentIndex) {
 }
 
 function spawnBall(userId, segment) {
-  const x = getColumnX(userId);
+  const x = currentColumns?.[userId] ?? canvas.width / 2;
   const y = canvas.height + BALL_RADIUS;
   let color = userGroups[userId]?.color || "#999";
   if (String(segment).endsWith("5")) color = "#ffcc00";
@@ -342,7 +342,7 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  currentColumns(data.id);
+  //getColumnX(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
   }
