@@ -193,8 +193,19 @@ function spawnBall(userId, segment) {
   }
 
   const y = canvas.height + BALL_RADIUS;
-  let color = userGroups[userId]?.color || "#999";
-  if (String(segment).endsWith("5")) color = "#ffcc00";
+  let color;
+  const isMe = userId === clientId;
+  const isTeammate =
+    userGroups[userId]?.icon === userGroup.icon &&
+    userGroups[userId]?.color === userGroup.color;
+  
+  if (segment % 10 === 5) {
+    color = "#ffcc00"; // bola amarilla para todos cada 5
+  } else if (isMe || isTeammate) {
+    color = userGroup.color;
+  } else {
+    color = "#999"; // gris para los demás
+  }
   balls.push({ x, y, segment, color });
 }
 
