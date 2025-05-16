@@ -214,6 +214,60 @@ function drawBall(ball) {
   ctx.fillText(label, ball.x, ball.y + 4);
 }
 
+function drawAvatar(userId) {
+  if (document.getElementById("avatar-" + userId)) return;
+
+  const div = document.createElement("div");
+  div.className = "avatar";
+  div.id = "avatar-" + userId;
+  div.style.left = Math.random() * (window.innerWidth - 40) + "px";
+  div.style.top = Math.random() * (window.innerHeight - 40) + "px";
+
+  div.innerHTML = `
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="28" fill="#222" stroke="#fff" stroke-width="2"/>
+      <circle cx="24" cy="26" r="3" fill="#fff"/>
+      <circle cx="40" cy="26" r="3" fill="#fff"/>
+      <path d="M24 42 C28 46, 36 46, 40 42" stroke="#fff" stroke-width="2" fill="none"/>
+      <rect x="10" y="24" width="6" height="16" rx="3" fill="#ccc"/>
+      <rect x="48" y="24" width="6" height="16" rx="3" fill="#ccc"/>
+    </svg>
+  `;
+
+  document.getElementById("audienceLayer").appendChild(div);
+}
+
+function reactToSegment(userId) {
+  const avatar = document.getElementById("avatar-" + userId);
+  if (!avatar) return;
+  const r = Math.random();
+  if (r < 0.5) {
+    avatar.classList.add("jump");
+    setTimeout(() => avatar.classList.remove("jump"), 400);
+  } else if (r < 0.85) {
+    avatar.classList.add("flash");
+    setTimeout(() => avatar.classList.remove("flash"), 300);
+  } else {
+    moveAvatar(userId);
+  }
+}
+
+function moveAvatar(userId) {
+  const avatar = document.getElementById("avatar-" + userId);
+  if (!avatar) return;
+  const currentTop = parseFloat(avatar.style.top) || 0;
+  const currentLeft = parseFloat(avatar.style.left) || 0;
+  const maxMove = Math.min(window.innerWidth, window.innerHeight) * 0.10;
+  const deltaX = (Math.random() - 0.5) * 2 * maxMove;
+  const deltaY = (Math.random() - 0.5) * 2 * maxMove;
+  let newLeft = currentLeft + deltaX;
+  let newTop = currentTop + deltaY;
+  newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - 40));
+  newTop = Math.max(0, Math.min(newTop, window.innerHeight - 40));
+  avatar.style.left = `${newLeft}px`;
+  avatar.style.top = `${newTop}px`;
+}
+
 // EventSource para la sincronización
 const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
@@ -230,3 +284,4 @@ syncEvents.onmessage = function(event) {
   drawAvatar(data.id);
   reactToSegment(data.id);
 };
+
