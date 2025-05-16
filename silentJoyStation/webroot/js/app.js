@@ -108,7 +108,90 @@ colorSelection.addEventListener("click", (e) => {
 });
 
 // Sincronización y animaciones
-// (Aquí pondríamos drawUserLines, spawnBall, animateOverlay... como ya los tienes)
+function reportSegment(segmentIndex) {
+  const color = segmentIndex % 10 === 5 ? "#ffcc00" : "#ffffff";
+  createWave(color); // puedes eliminar si no usas olas visuales
+
+  fetch(`http://${backendHost}:5050/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: clientId, segment: segmentIndex, group: userGroup })
+  }).catch(err => console.warn("No se pudo reportar el segmento:", err));
+}
+
+function spawnBall(userId, segment) {
+  const x = getColumnX(userId);
+  const y = canvas.height + BALL_RADIUS;
+  let color;
+
+  if (String(segment).endsWith("5")) {
+    color = "#ffcc00";
+  } else {
+    color = userGroups[userId]?.color || "#999";
+  }
+
+  balls.push({ x, y, segment, color });
+}
+
+function drawUserLines() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const ids = Object.keys(columns).slice(0, 20); // máximo 20 líneas
+
+  ids.forEach((id) => {
+    ctx.beginPath();
+    ctx.moveTo(columns[id], 0);
+    ctx.lineTo(columns[id], canvas.height);
+    ctx.strokeStyle = id === clientId ? "#f00" : (userGroups[id]?.color || "#333");
+    ctx.lineWidth = id === clientId ? 4 : 2;
+    ctx.stroke();
+  });
+}
+
+function getColumnX(userId) {
+  if (!columns[clientId]) columns[clientId] = canvas.width / 2;
+  if (!columns[userId]) {
+    const used = Object.values(columns);
+    let offset = COLUMN_WIDTH;
+    let candidate;
+    while (true) {
+      for (let dir of [1, -1]) {
+        candidate = canvas.width / 2 + dir * offset;
+        if (!used.includes(candidate)) {
+          columns[userId] = candidate;
+          return candidate;
+        }
+      }
+      offset += COLUMN_WIDTH;
+    }
+  }
+  return columns[userId];
+}
+
+function animateOverlay() {
+  if (!showOverlay) return;
+  drawUserLines();
+  for (let i = balls.length - 1; i >= 0; i--) {
+    balls[i].y -= SPEED;
+    if (balls[i].y + BALL_RADIUS < 0) {
+      balls.splice(i, 1);
+    } else {
+      drawBall(balls[i]);
+    }
+  }
+  animationId = requestAnimationFrame(animateOverlay);
+}
+
+function drawBall(ball) {
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, 2 * Math.PI);
+  ctx.fillStyle = ball.color;
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "center";
+  const label = String(ball.segment).padStart(3, "0");
+  ctx.fillText(label, ball.x, ball.y + 4);
+}
 
 // EventSource para la sincronización
 const backendHost = window.location.hostname;
