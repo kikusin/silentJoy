@@ -88,12 +88,15 @@ reloadBtn.addEventListener("click", () => {
 
 selectGroupButton.addEventListener("click", () => {
   groupSelector.style.display = groupSelector.style.display === 'flex' ? 'none' : 'flex';
+  iconSelection.style.display = 'flex';
+  colorSelection.style.display = 'none';
 });
 
 iconSelection.addEventListener("click", (e) => {
   if (e.target.textContent.trim()) {
     userGroup.icon = e.target.textContent.trim();
-    selectGroupButton.innerText = userGroup.icon;
+    iconSelection.style.display = 'none';
+    colorSelection.style.display = 'flex';
   }
 });
 
@@ -101,8 +104,11 @@ colorSelection.addEventListener("click", (e) => {
   const color = e.target.getAttribute('data-color');
   if (color) {
     userGroup.color = color;
+    selectGroupButton.innerText = userGroup.icon;
     selectGroupButton.style.background = userGroup.color;
     groupSelector.style.display = 'none';
+    iconSelection.style.display = 'none';
+    colorSelection.style.display = 'none';
   }
 });
 
