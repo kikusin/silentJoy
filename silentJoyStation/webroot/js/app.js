@@ -50,7 +50,7 @@ function setupHLS(delayMs = 1000) {
       });
   
       hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
-        const match = data.frag.relurl.match(/stream(\\d+)\\.ts/);
+        const match = data.frag.relurl.match(/stream(\d+)\.ts/);
         if (match) {
           reportSegment(parseInt(match[1], 10));
         }
