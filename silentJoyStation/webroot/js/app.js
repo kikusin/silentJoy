@@ -129,6 +129,7 @@ function spawnBall(userId, segment) {
   } else {
     color = userGroups[userId]?.color || "#999";
   }
+  console.log("💥 Ball for:", userId, "segment", segment);
 
   balls.push({ x, y, segment, color });
 }
@@ -198,5 +199,12 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
+    // NUEVO: asegurar que tenga columna
+    getColumnX(data.id);
+
+    // NUEVO: guardar grupo si viene
+    if (data.group) {
+      userGroups[data.id] = data.group;
+    }
   if (showOverlay) spawnBall(data.id, data.segment);
 };
