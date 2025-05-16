@@ -30,51 +30,41 @@ const SPEED = 1.5;
 
 // Setup HLS
 function setupHLS(delayMs = 1000) {
-    if (hlsInstance) {
-      try {
-        hlsInstance.destroy();
-      } catch (err) {
-        console.warn("⚠️ Error al destruir HLS:", err);
-      }
-      hlsInstance = null;
+  if (hlsInstance) {
+    try {
+      hlsInstance.destroy();
+    } catch (err) {
+      console.warn("⚠️ Error al destruir HLS:", err);
     }
-  
-    if (Hls.isSupported()) {
-      hlsInstance = new Hls();
-      hlsInstance.attachMedia(audio);
-      hlsInstance.loadSource("hls/stream.m3u8");
-  
-      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log("✅ MANIFEST PARSED");
-        delayMs > 0 ? setTimeout(() => audio.play(), delayMs) : audio.play();
-      });
-  
-      hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
-        const match = data.frag.relurl.match(/stream(\d+)\.ts/);
-        if (match) {
-          reportSegment(parseInt(match[1], 10));
-        }
-      });
-  
-      hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-        console.error("❌ HLS ERROR", data);
-      });
-  
-    } else {
-      console.warn("⚠️ HLS no soportado, usando fallback");
-      audio.src = "hls/stream.m3u8";
-      audio.addEventListener('canplay', () => audio.play());
-    }
+    hlsInstance = null;
   }
 
-  function createWave(color) {
-    const wave = document.createElement("div");
-    wave.className = "wave";
-    wave.style.backgroundColor = color;
-    const container = document.getElementById("waveContainer");
-    container.appendChild(wave);
-    wave.addEventListener("animationend", () => wave.remove());
+  if (Hls.isSupported()) {
+    hlsInstance = new Hls();
+    hlsInstance.attachMedia(audio);
+    hlsInstance.loadSource("hls/stream.m3u8");
+
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+      console.log("✅ MANIFEST PARSED");
+      delayMs > 0 ? setTimeout(() => audio.play(), delayMs) : audio.play();
+    });
+
+    hlsInstance.on(Hls.Events.FRAG_CHANGED, (event, data) => {
+      const match = data.frag.relurl.match(/stream(\d+)\.ts/);
+      if (match) {
+        reportSegment(parseInt(match[1], 10));
+      }
+    });
+
+    hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+      console.error("❌ HLS ERROR", data);
+    });
+  } else {
+    console.warn("⚠️ HLS no soportado, usando fallback");
+    audio.src = "hls/stream.m3u8";
+    audio.addEventListener('canplay', () => audio.play());
   }
+}
 
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
@@ -116,10 +106,18 @@ colorSelection.addEventListener("click", (e) => {
   }
 });
 
-// Sincronización y animaciones
+function createWave(color) {
+  const wave = document.createElement("div");
+  wave.className = "wave";
+  wave.style.backgroundColor = color;
+  const container = document.getElementById("waveContainer");
+  container.appendChild(wave);
+  wave.addEventListener("animationend", () => wave.remove());
+}
+
 function reportSegment(segmentIndex) {
   const color = segmentIndex % 10 === 5 ? "#ffcc00" : "#ffffff";
-  createWave(color); // puedes eliminar si no usas olas visuales
+  createWave(color);
 
   if (segmentIndex % 10 === 5) {
     const title = document.getElementById("title");
@@ -142,22 +140,26 @@ function reportSegment(segmentIndex) {
 function spawnBall(userId, segment) {
   const x = getColumnX(userId);
   const y = canvas.height + BALL_RADIUS;
-  let color;
-
-  if (String(segment).endsWith("5")) {
-    color = "#ffcc00";
-  } else {
-    color = userGroups[userId]?.color || "#999";
-  }
-  console.log("💥 Ball for:", userId, "segment", segment);
-
+  let color = userGroups[userId]?.color || "#999";
+  if (String(segment).endsWith("5")) color = "#ffcc00";
   balls.push({ x, y, segment, color });
+}
+
+function drawBall(ball) {
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, 2 * Math.PI);
+  ctx.fillStyle = ball.color;
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "center";
+  const label = String(ball.segment).padStart(3, "0");
+  ctx.fillText(label, ball.x, ball.y + 4);
 }
 
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const ids = Object.keys(columns).slice(0, 20); // máximo 20 líneas
-
+  const ids = Object.keys(columns).slice(0, 20);
   ids.forEach((id) => {
     ctx.beginPath();
     ctx.moveTo(columns[id], 0);
@@ -202,29 +204,15 @@ function animateOverlay() {
   animationId = requestAnimationFrame(animateOverlay);
 }
 
-function drawBall(ball) {
-  ctx.beginPath();
-  ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, 2 * Math.PI);
-  ctx.fillStyle = ball.color;
-  ctx.fill();
-  ctx.fillStyle = "#fff";
-  ctx.font = "12px sans-serif";
-  ctx.textAlign = "center";
-  const label = String(ball.segment).padStart(3, "0");
-  ctx.fillText(label, ball.x, ball.y + 4);
-}
-
 function drawAvatar(userId) {
   if (document.getElementById("avatar-" + userId)) return;
-
   const div = document.createElement("div");
   div.className = "avatar";
   div.id = "avatar-" + userId;
   div.style.left = Math.random() * (window.innerWidth - 40) + "px";
   div.style.top = Math.random() * (window.innerHeight - 40) + "px";
-
   div.innerHTML = `
-    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="pointer-events: none;">
       <circle cx="32" cy="32" r="28" fill="#222" stroke="#fff" stroke-width="2"/>
       <circle cx="24" cy="26" r="3" fill="#fff"/>
       <circle cx="40" cy="26" r="3" fill="#fff"/>
@@ -233,7 +221,6 @@ function drawAvatar(userId) {
       <rect x="48" y="24" width="6" height="16" rx="3" fill="#ccc"/>
     </svg>
   `;
-
   document.getElementById("audienceLayer").appendChild(div);
 }
 
@@ -268,20 +255,19 @@ function moveAvatar(userId) {
   avatar.style.top = `${newTop}px`;
 }
 
-// EventSource para la sincronización
 const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-    // NUEVO: asegurar que tenga columna
-    getColumnX(data.id);
-
-    // NUEVO: guardar grupo si viene
-    if (data.group) {
-      userGroups[data.id] = data.group;
-    }
-  if (showOverlay) spawnBall(data.id, data.segment);
+  getColumnX(data.id);
+  if (data.group) {
+    userGroups[data.id] = data.group;
+  }
   drawAvatar(data.id);
   reactToSegment(data.id);
+  if (showOverlay) spawnBall(data.id, data.segment);
 };
 
+syncEvents.onerror = function(err) {
+  console.error("❌ Error en EventSource:", err);
+};
