@@ -404,7 +404,7 @@ syncEvents.onerror = function(err) {
 document.getElementById('forwardBtn').addEventListener('click', () => {
   //console.log("⏩ Intentando avanzar");
   if (audio && !isNaN(audio.currentTime)) {
-    audio.currentTime = Math.round((audio.currentTime + 0.3) * 10) / 10;
+    audio.currentTime = Math.round((audio.currentTime + 0.4) * 10) / 10;
     console.log(`⏩ Adelantado a ${audio.currentTime.toFixed(3)}s`);
   } else {
     console.warn("⛔ audio no está listo");
