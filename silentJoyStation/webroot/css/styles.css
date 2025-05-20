@@ -21,7 +21,7 @@ html, body {
   top: 10vh;
   width: 100%;
   text-align: center;
-  font-size: 120px;
+  font-size: 100px;
   color: white;
   font-weight: 700;
   z-index: 3;
@@ -178,7 +178,7 @@ html, body {
     
     #selectGroupButton {
       position: fixed;
-      bottom: 140px;
+      bottom: 270px;
       right: 30px;
       font-size: 40px;
       display: none;
@@ -186,7 +186,7 @@ html, body {
     
     #seekControls {
       position: fixed;
-      bottom: 270px;
+      bottom: 140px;
       right: 30px;
       display: none;
       flex-direction: column;
@@ -306,8 +306,8 @@ html, body {
       #selectGroupButton,
       #reloadStreamButton,
       #seekControls button {
-        width: 160px;
-        height: 160px;
+        width: 120px;
+        height: 120px;
         font-size: 48px;
       }
     
