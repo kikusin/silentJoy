@@ -67,12 +67,14 @@ function setupHLS(delayMs = 1000) {
   }
 }
 
+const seekControls = document.getElementById("seekControls");
+
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
   canvas.style.display = showOverlay ? 'block' : 'none';
   //reloadBtn.style.display = showOverlay ? 'block' : 'none';
   selectGroupButton.style.display = showOverlay ? 'block' : 'none';
-
+  seekControls.style.display = showOverlay ? 'flex' : 'none';
   if (showOverlay) {
     animationId = requestAnimationFrame(animateOverlay);
   } else {
