@@ -112,6 +112,8 @@ colorSelection.addEventListener("click", (e) => {
     groupSelector.style.display = 'none';
     iconSelection.style.display = 'none';
     colorSelection.style.display = 'none';
+        // Llamamos aquí a la función de sincronización grupal
+    setTimeout(() => autoSyncWithGroup(), 1000);
     // Mostrar mensaje flotante con el grupo
     const msg = document.createElement("div");
     msg.innerText = `Equipo: ${userGroup.icon}`;
@@ -433,3 +435,66 @@ startImage.addEventListener("click", () => {
     startImage.classList.remove("shrink");
   }
 });
+
+
+function autoSyncWithGroup() {
+  const myTime = audio.currentTime;
+  const SEGMENT_DURATION = 2.0; // segundos
+  const threshold = 0.1; // 100 ms
+
+  // Filtra usuarios de mi grupo (excepto yo) que ya han emitido segmento
+  const peers = Object.entries(userGroups)
+    .filter(([id, group]) =>
+      id !== clientId &&
+      group.icon === userGroup.icon &&
+      group.color === userGroup.color
+    );
+
+  if (peers.length === 0) {
+    console.log("🔍 No hay miembros activos del grupo para sincronizar.");
+    return;
+  }
+
+  // Buscar último segmento recibido de algún compañero (por EventSource)
+  // Suponemos que `segment` está en el último evento para cada peer
+  let lastPeerSegment = null;
+  syncEvents.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (
+      data.id !== clientId &&
+      data.group &&
+      data.group.icon === userGroup.icon &&
+      data.group.color === userGroup.color
+    ) {
+      lastPeerSegment = data.segment;
+    }
+
+    // ejecuta el comportamiento visual actual
+    drawAvatar(data.id);
+    reactToSegment(data.id);
+    if (showOverlay) spawnBall(data.id, data.segment);
+  };
+
+  setTimeout(() => {
+    if (lastPeerSegment === null) {
+      console.log("⛔ No se pudo obtener un segmento de referencia.");
+      return;
+    }
+
+    const referenceTime = lastPeerSegment * SEGMENT_DURATION;
+    const drift = myTime - referenceTime;
+
+    if (Math.abs(drift) > threshold) {
+      console.log(`🔄 Autosync: desfase de ${drift.toFixed(3)}s. Ajustando a ${referenceTime.toFixed(3)}s`);
+      if (audio.readyState >= 2) {
+        audio.currentTime = referenceTime;
+      } else {
+        audio.addEventListener('canplay', () => {
+          audio.currentTime = referenceTime;
+        }, { once: true });
+      }
+    } else {
+      console.log(`✅ Ya estás sincronizado con tu grupo. Drift: ${drift.toFixed(3)}s`);
+    }
+  }, 1500);
+}
