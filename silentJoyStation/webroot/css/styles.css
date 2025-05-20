@@ -344,11 +344,21 @@ audio {
   canvas {
     font-size: 24px !important;
   }
+  #seekControls button {
+    width: 160px;
+    height: 160px;
+    font-size: 48px;
+  }
 }
 
 #seekControls button {
-  font-size: 18px;
-  padding: 8px 14px;
-  margin-right: 8px;
-  border-radius: 8px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  font-size: 32px;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  margin: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  cursor: pointer;
 }

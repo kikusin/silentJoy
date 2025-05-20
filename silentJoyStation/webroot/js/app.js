@@ -4,7 +4,7 @@ const audio = document.getElementById("player");
 const canvas = document.getElementById("syncOverlay");
 const ctx = canvas.getContext('2d');
 const showSyncButton = document.getElementById("showSyncButton");
-const reloadBtn = document.getElementById("reloadStreamButton");
+//const reloadBtn = document.getElementById("reloadStreamButton");
 const selectGroupButton = document.getElementById("selectGroupButton");
 const groupSelector = document.getElementById("groupSelector");
 const iconSelection = document.getElementById("iconSelection");
@@ -70,7 +70,7 @@ function setupHLS(delayMs = 1000) {
 showSyncButton.addEventListener("click", () => {
   showOverlay = !showOverlay;
   canvas.style.display = showOverlay ? 'block' : 'none';
-  reloadBtn.style.display = showOverlay ? 'block' : 'none';
+  //reloadBtn.style.display = showOverlay ? 'block' : 'none';
   selectGroupButton.style.display = showOverlay ? 'block' : 'none';
 
   if (showOverlay) {
@@ -81,11 +81,11 @@ showSyncButton.addEventListener("click", () => {
   }
 });
 
-reloadBtn.addEventListener("click", () => {
+/*reloadBtn.addEventListener("click", () => {
   audio.pause();
   if (hlsInstance) hlsInstance.destroy();
   setTimeout(setupHLS, 1000);
-});
+});*/
 
 selectGroupButton.addEventListener("click", () => {
   groupSelector.style.display = groupSelector.style.display === 'flex' ? 'none' : 'flex';
@@ -249,8 +249,11 @@ function drawUserLines() {
       ctx.strokeStyle = "#f00";
       ctx.lineWidth = 4;
     } else if (
-      userGroups[userId]?.icon === userGroup.icon &&
-      userGroups[userId]?.color === userGroup.color
+      userGroups[userId] &&
+      userGroup.icon &&
+      userGroup.color &&
+      userGroups[userId].icon === userGroup.icon &&
+      userGroups[userId].color === userGroup.color
     ) {
       ctx.strokeStyle = userGroup.color;
       ctx.lineWidth = 3;
@@ -403,5 +406,18 @@ document.getElementById('backwardBtn').addEventListener('click', () => {
     console.log(`⏪ Retrocedido a ${audio.currentTime.toFixed(3)}s`);
   } else {
     console.warn("⛔ audio no está listo");
+  }
+});
+
+startImage.addEventListener("click", () => {
+  if (!playing) {
+    setupHLS();
+    audio.play();
+    playing = true;
+    startImage.classList.add("shrink");
+  } else {
+    audio.pause();
+    playing = false;
+    startImage.classList.remove("shrink");
   }
 });
