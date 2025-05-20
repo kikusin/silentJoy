@@ -178,8 +178,8 @@ html, body {
     
     #selectGroupButton {
       position: fixed;
-      bottom: 380px;
-      right: 30px;
+      bottom: 30px;
+      right: 140px;
       font-size: 40px;
       display: none;
     }
@@ -197,7 +197,7 @@ html, body {
     /* Selector de grupo */
     #groupSelector {
       position: fixed;
-      bottom: 380px;
+      bottom: 30px;
       right: 30px;
       background: white;
       padding: 10px;
@@ -298,6 +298,18 @@ html, body {
         transform: translate(-50%, -50%) scale(35);
         opacity: 0.0;
       }
+    }
+
+    #showSyncButton div {
+      width: 6px;
+      height: 24px;
+      background: #333;
+      margin: 0 2px;
+      border-radius: 2px;
+    }
+    
+    #showSyncButton div:nth-child(2) {
+      background: red;
     }
     
     /* Responsive para móviles */
