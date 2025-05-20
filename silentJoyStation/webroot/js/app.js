@@ -231,20 +231,21 @@ function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const now = Date.now();
-  const ACTIVE_WINDOW = 5000; // 5 segundos
-
-  const allUserIds = Object.keys(lastActivity).filter(id => {
-    return now - lastActivity[id] < ACTIVE_WINDOW;
-  });
-
+  const ACTIVE_WINDOW = 60000;
+  
+  const allUserIds = Object.keys(userGroups);
+  
   const teammates = allUserIds.filter(id =>
     id !== clientId &&
     userGroups[id]?.icon === userGroup.icon &&
-    userGroups[id]?.color === userGroup.color
+    userGroups[id]?.color === userGroup.color &&
+    lastActivity[id] && now - lastActivity[id] < ACTIVE_WINDOW
   );
-
+  
   const others = allUserIds.filter(id =>
-    id !== clientId && !teammates.includes(id)
+    id !== clientId &&
+    !teammates.includes(id) &&
+    lastActivity[id] && now - lastActivity[id] < ACTIVE_WINDOW
   );
 
   const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
