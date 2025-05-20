@@ -384,3 +384,18 @@ syncEvents.onmessage = function(event) {
 syncEvents.onerror = function(err) {
   console.error("❌ Error en EventSource:", err);
 };
+
+
+document.getElementById('forwardBtn').addEventListener('click', () => {
+  if (video && !isNaN(video.currentTime)) {
+    video.currentTime = Math.min(video.duration, video.currentTime + 0.1);
+    console.log(`⏩ Adelantado a ${video.currentTime.toFixed(3)}s`);
+  }
+});
+
+document.getElementById('backwardBtn').addEventListener('click', () => {
+  if (video && !isNaN(video.currentTime)) {
+    video.currentTime = Math.max(0, video.currentTime - 0.1);
+    console.log(`⏪ Retrocedido a ${video.currentTime.toFixed(3)}s`);
+  }
+});
