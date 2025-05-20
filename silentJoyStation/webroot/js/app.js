@@ -216,7 +216,11 @@ function drawBall(ball) {
   ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, 2 * Math.PI);
   ctx.fillStyle = ball.color;
   ctx.fill();
-  ctx.fillStyle = "#fff";
+  if (ball.color === "#ffffff") {
+    ctx.fillStyle = "#000"; // texto negro sobre fondo blanco
+  } else {
+    ctx.fillStyle = "#fff"; // texto blanco normal
+  }
   ctx.font = "12px sans-serif";
   ctx.textAlign = "center";
   const label = String(ball.segment % 1000).padStart(3, "0");
@@ -226,7 +230,12 @@ function drawBall(ball) {
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const allUserIds = Object.keys(userGroups);
+  const now = Date.now();
+  const ACTIVE_WINDOW = 5000; // 5 segundos
+
+  const allUserIds = Object.keys(lastActivity).filter(id => {
+    return now - lastActivity[id] < ACTIVE_WINDOW;
+  });
 
   const teammates = allUserIds.filter(id =>
     id !== clientId &&
