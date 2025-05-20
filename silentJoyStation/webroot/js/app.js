@@ -232,7 +232,7 @@ function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const now = Date.now();
-  const ACTIVE_WINDOW = 60000;
+  const ACTIVE_WINDOW = 5000;
   
   const allUserIds = Object.keys(userGroups);
   
