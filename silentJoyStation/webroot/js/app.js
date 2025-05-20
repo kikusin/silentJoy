@@ -23,7 +23,6 @@ let animationId;
 let userGroup = { icon: '', color: '' };
 const userGroups = {};
 const columns = {};
-const lastSegments = {};
 const balls = [];
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
@@ -113,8 +112,6 @@ colorSelection.addEventListener("click", (e) => {
     groupSelector.style.display = 'none';
     iconSelection.style.display = 'none';
     colorSelection.style.display = 'none';
-        // Llamamos aquí a la función de sincronización grupal
-    setTimeout(() => autoSyncWithGroup(), 1000);
     // Mostrar mensaje flotante con el grupo
     const msg = document.createElement("div");
     msg.innerText = `Equipo: ${userGroup.icon}`;
@@ -390,11 +387,7 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-
-  // 🧠 Guarda el último segmento de cada usuario
-  lastSegments[data.id] = data.segment;
-
-  // Mantén tus funciones visuales
+  //getColumnX(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
   }
@@ -406,8 +399,6 @@ syncEvents.onmessage = function(event) {
 syncEvents.onerror = function(err) {
   console.error("❌ Error en EventSource:", err);
 };
-
-
 
 
 document.getElementById('forwardBtn').addEventListener('click', () => {
@@ -442,42 +433,3 @@ startImage.addEventListener("click", () => {
     startImage.classList.remove("shrink");
   }
 });
-
-
-function autoSyncWithGroup() {
-  const myTime = audio.currentTime;
-  const SEGMENT_DURATION = 2.0; // segundos
-  const threshold = 0.1; // 100 ms
-
-  // Filtra IDs de compañeros del mismo grupo
-  const peerIds = Object.keys(userGroups).filter(id =>
-    id !== clientId &&
-    userGroups[id].icon === userGroup.icon &&
-    userGroups[id].color === userGroup.color &&
-    lastSegments[id] !== undefined
-  );
-
-  if (peerIds.length === 0) {
-    console.log("🔍 No hay miembros activos del grupo para sincronizar.");
-    return;
-  }
-
-  // Usamos el segmento más alto como referencia
-  const maxSegment = Math.max(...peerIds.map(id => lastSegments[id]));
-  const referenceTime = maxSegment * SEGMENT_DURATION;
-
-  const drift = myTime - referenceTime;
-
-  if (Math.abs(drift) > threshold) {
-    console.log(`🔄 Autosync: desfase de ${drift.toFixed(3)}s. Ajustando a ${referenceTime.toFixed(3)}s`);
-    if (audio.readyState >= 2) {
-      audio.currentTime = referenceTime;
-    } else {
-      audio.addEventListener('canplay', () => {
-        audio.currentTime = referenceTime;
-      }, { once: true });
-    }
-  } else {
-    console.log(`✅ Ya estás sincronizado con tu grupo. Drift: ${drift.toFixed(3)}s`);
-  }
-}
