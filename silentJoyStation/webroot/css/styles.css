@@ -235,7 +235,7 @@ html, body {
       background-color: currentColor;
     }
     
-    #colorSelection div[data-color="#e74c3c"] { color: #e74c3c; }
+    #colorSelection div[data-color="#def912"] { color: #def912; }
     #colorSelection div[data-color="#27ae60"] { color: #27ae60; }
     #colorSelection div[data-color="#2980b9"] { color: #2980b9; }
     #colorSelection div[data-color="#f1c40f"] { color: #f1c40f; }
