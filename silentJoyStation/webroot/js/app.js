@@ -414,7 +414,7 @@ document.getElementById('forwardBtn').addEventListener('click', () => {
 document.getElementById('backwardBtn').addEventListener('click', () => {
   //console.log("⏪ Intentando retroceder");
   if (audio && !isNaN(audio.currentTime)) {
-    audio.currentTime = Math.max(0, Math.round((audio.currentTime - 0.1) * 10) / 10);
+    audio.currentTime = Math.max(0, Math.round((audio.currentTime - 0.05) * 100) / 100);
     console.log(`⏪ Retrocedido a ${audio.currentTime.toFixed(3)}s`);
   } else {
     console.warn("⛔ audio no está listo");
