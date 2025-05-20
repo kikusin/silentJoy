@@ -24,7 +24,6 @@ let userGroup = { icon: '', color: '' };
 const userGroups = {};
 const columns = {};
 const balls = [];
-const lastActivity = {};
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
 const SPEED = 1.5;
@@ -231,22 +230,16 @@ function drawBall(ball) {
 function drawUserLines() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const now = Date.now();
-  const ACTIVE_WINDOW = 5000;
-  
   const allUserIds = Object.keys(userGroups);
-  
+
   const teammates = allUserIds.filter(id =>
     id !== clientId &&
     userGroups[id]?.icon === userGroup.icon &&
-    userGroups[id]?.color === userGroup.color &&
-    lastActivity[id] && now - lastActivity[id] < ACTIVE_WINDOW
+    userGroups[id]?.color === userGroup.color
   );
-  
+
   const others = allUserIds.filter(id =>
-    id !== clientId &&
-    !teammates.includes(id) &&
-    lastActivity[id] && now - lastActivity[id] < ACTIVE_WINDOW
+    id !== clientId && !teammates.includes(id)
   );
 
   const idsToDraw = [clientId, ...teammates, ...others].slice(0, 16);
@@ -284,16 +277,22 @@ function getColumnLayout(userIds) {
   const center = canvas.width / 2;
   layout[clientId] = center;
 
-  let offset = COLUMN_WIDTH;
-  let i = 1;
+  let leftOffset = COLUMN_WIDTH;
+  let rightOffset = COLUMN_WIDTH;
 
+  let toggle = true;
   for (const id of userIds) {
     if (id === clientId) continue;
-    const dir = i % 2 === 0 ? -1 : 1;
-    const position = center + dir * offset;
-    layout[id] = position;
-    if (dir === 1) offset += COLUMN_WIDTH;
-    i++;
+
+    if (toggle) {
+      layout[id] = center - leftOffset;
+      leftOffset += COLUMN_WIDTH;
+    } else {
+      layout[id] = center + rightOffset;
+      rightOffset += COLUMN_WIDTH;
+    }
+
+    toggle = !toggle;
   }
 
   return layout;
@@ -388,7 +387,6 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  lastActivity[data.id] = Date.now();
   //getColumnX(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
