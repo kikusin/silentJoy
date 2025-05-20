@@ -387,15 +387,21 @@ syncEvents.onerror = function(err) {
 
 
 document.getElementById('forwardBtn').addEventListener('click', () => {
+  console.log("⏩ Intentando avanzar");
   if (audio && !isNaN(audio.currentTime)) {
     audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 0.1);
     console.log(`⏩ Adelantado a ${audio.currentTime.toFixed(3)}s`);
+  } else {
+    console.warn("⛔ audio no está listo");
   }
 });
 
 document.getElementById('backwardBtn').addEventListener('click', () => {
+  console.log("⏪ Intentando retroceder");
   if (audio && !isNaN(audio.currentTime)) {
     audio.currentTime = Math.max(0, audio.currentTime - 0.1);
     console.log(`⏪ Retrocedido a ${audio.currentTime.toFixed(3)}s`);
+  } else {
+    console.warn("⛔ audio no está listo");
   }
 });
