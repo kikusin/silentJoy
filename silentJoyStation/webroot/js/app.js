@@ -23,6 +23,7 @@ let animationId;
 let userGroup = { icon: '', color: '' };
 const userGroups = {};
 const columns = {};
+const lastSegments = {};
 const balls = [];
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
@@ -389,7 +390,11 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  //getColumnX(data.id);
+
+  // 🧠 Guarda el último segmento de cada usuario
+  lastSegments[data.id] = data.segment;
+
+  // Mantén tus funciones visuales
   if (data.group) {
     userGroups[data.id] = data.group;
   }
@@ -401,6 +406,8 @@ syncEvents.onmessage = function(event) {
 syncEvents.onerror = function(err) {
   console.error("❌ Error en EventSource:", err);
 };
+
+
 
 
 document.getElementById('forwardBtn').addEventListener('click', () => {
@@ -442,59 +449,35 @@ function autoSyncWithGroup() {
   const SEGMENT_DURATION = 2.0; // segundos
   const threshold = 0.1; // 100 ms
 
-  // Filtra usuarios de mi grupo (excepto yo) que ya han emitido segmento
-  const peers = Object.entries(userGroups)
-    .filter(([id, group]) =>
-      id !== clientId &&
-      group.icon === userGroup.icon &&
-      group.color === userGroup.color
-    );
+  // Filtra IDs de compañeros del mismo grupo
+  const peerIds = Object.keys(userGroups).filter(id =>
+    id !== clientId &&
+    userGroups[id].icon === userGroup.icon &&
+    userGroups[id].color === userGroup.color &&
+    lastSegments[id] !== undefined
+  );
 
-  if (peers.length === 0) {
+  if (peerIds.length === 0) {
     console.log("🔍 No hay miembros activos del grupo para sincronizar.");
     return;
   }
 
-  // Buscar último segmento recibido de algún compañero (por EventSource)
-  // Suponemos que `segment` está en el último evento para cada peer
-  let lastPeerSegment = null;
-  syncEvents.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    if (
-      data.id !== clientId &&
-      data.group &&
-      data.group.icon === userGroup.icon &&
-      data.group.color === userGroup.color
-    ) {
-      lastPeerSegment = data.segment;
-    }
+  // Usamos el segmento más alto como referencia
+  const maxSegment = Math.max(...peerIds.map(id => lastSegments[id]));
+  const referenceTime = maxSegment * SEGMENT_DURATION;
 
-    // ejecuta el comportamiento visual actual
-    drawAvatar(data.id);
-    reactToSegment(data.id);
-    if (showOverlay) spawnBall(data.id, data.segment);
-  };
+  const drift = myTime - referenceTime;
 
-  setTimeout(() => {
-    if (lastPeerSegment === null) {
-      console.log("⛔ No se pudo obtener un segmento de referencia.");
-      return;
-    }
-
-    const referenceTime = lastPeerSegment * SEGMENT_DURATION;
-    const drift = myTime - referenceTime;
-
-    if (Math.abs(drift) > threshold) {
-      console.log(`🔄 Autosync: desfase de ${drift.toFixed(3)}s. Ajustando a ${referenceTime.toFixed(3)}s`);
-      if (audio.readyState >= 2) {
-        audio.currentTime = referenceTime;
-      } else {
-        audio.addEventListener('canplay', () => {
-          audio.currentTime = referenceTime;
-        }, { once: true });
-      }
+  if (Math.abs(drift) > threshold) {
+    console.log(`🔄 Autosync: desfase de ${drift.toFixed(3)}s. Ajustando a ${referenceTime.toFixed(3)}s`);
+    if (audio.readyState >= 2) {
+      audio.currentTime = referenceTime;
     } else {
-      console.log(`✅ Ya estás sincronizado con tu grupo. Drift: ${drift.toFixed(3)}s`);
+      audio.addEventListener('canplay', () => {
+        audio.currentTime = referenceTime;
+      }, { once: true });
     }
-  }, 1500);
+  } else {
+    console.log(`✅ Ya estás sincronizado con tu grupo. Drift: ${drift.toFixed(3)}s`);
+  }
 }
