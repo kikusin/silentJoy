@@ -316,6 +316,10 @@ html, body {
     
     /* Responsive para móviles */
     @media (max-width: 768px) {
+      #title {
+        top: 5vh;
+      }
+
       #showSyncButton,
       #selectGroupButton,
       #reloadStreamButton,
