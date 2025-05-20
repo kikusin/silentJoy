@@ -181,7 +181,7 @@ html, body {
     #selectGroupButton {
       position: fixed;
       bottom: 30px;
-      right: 140px;
+      left: 30px;
       font-size: 40px;
       display: none;
     }
@@ -317,7 +317,7 @@ html, body {
     /* Responsive para móviles */
     @media (max-width: 768px) {
       #title {
-        top: 5vh;
+        top: 4vh;
       }
 
       #showSyncButton,
@@ -326,12 +326,12 @@ html, body {
       #seekControls button {
         width: 60px;
         height: 60px;
-        font-size: 48px;
+        font-size: 36px;
       }
     
       #showSyncButton div {
         width: 12px;
-        height: 48px;
+        height: 36px;
       }
     
       .avatar {
