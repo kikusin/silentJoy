@@ -23,7 +23,6 @@ let animationId;
 let userGroup = { icon: '', color: '' };
 const userGroups = {};
 const columns = {};
-const lastSegments = {}; 
 const balls = [];
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
@@ -388,22 +387,7 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
-
-  // 🧠 Guarda el último segmento de cada usuario
-  lastSegments[data.id] = data.segment;
-  if (
-    data.id !== clientId &&
-    data.group &&
-    data.group.icon === userGroup.icon &&
-    data.group.color === userGroup.color
-  ) {
-    const SEGMENT_DURATION = 2.0; // o el valor real en tu sistema
-    const referenceTime = data.segment * SEGMENT_DURATION;
-    const drift = audio.currentTime - referenceTime;
-    console.log(`🕒 Drift respecto a ${data.id}: ${drift.toFixed(3)}s (local: ${audio.currentTime.toFixed(3)}s vs ref: ${referenceTime.toFixed(3)}s)`);
-  }
-
-  // Mantén tus funciones visuales
+  //getColumnX(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
   }
