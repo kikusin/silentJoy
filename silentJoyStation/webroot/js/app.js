@@ -24,6 +24,7 @@ let userGroup = { icon: '', color: '' };
 const userGroups = {};
 const columns = {};
 const balls = [];
+const lastActivity = {};
 const COLUMN_WIDTH = 60;
 const BALL_RADIUS = window.innerWidth <= 768 ? 20 : 10;
 const SPEED = 1.5;
@@ -387,6 +388,7 @@ const backendHost = window.location.hostname;
 const syncEvents = new EventSource(`http://${backendHost}:5050/events`);
 syncEvents.onmessage = function(event) {
   const data = JSON.parse(event.data);
+  lastActivity[data.id] = Date.now();
   //getColumnX(data.id);
   if (data.group) {
     userGroups[data.id] = data.group;
